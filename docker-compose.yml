@@ -1,0 +1,37 @@
+data:
+  container_name: bottle-data
+  image: busybox
+  stdin_open: true
+  tty: false
+  volumes:
+    - ./docker/mysql:/etc/mysql/conf.d:ro
+    - ./app:/home/bottle
+  command: /bin/sh
+
+mysql:
+  container_name: bottle-db
+  image: mysql
+  volumes:
+   - ./initdb.d:/docker-entrypoint-initdb.d
+  environment:
+    MYSQL_ROOT_PASSWORD: password
+    MYSQL_USER: python
+    MYSQL_PASSWORD: python
+    MYSQL_DATABASE: sample
+  ports:
+    - "3306:3306"
+  volumes_from:
+    - data
+
+application:
+  container_name: bottle-python
+  build: .
+  tty: false
+  volumes_from:
+    - data
+  ports:
+    - "8080:8080"
+  environment:
+    CODEIGNITER_ENV: development
+  links:
+    - mysql:bottle-db
